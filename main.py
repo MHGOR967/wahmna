@@ -46,9 +46,11 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────
 
 BOT_TOKEN      = os.environ.get("BOT_TOKEN",      "8622460568:AAHKMm5AoPtTMH8pmp-Cz5alCzuOLjmvuig")
-API_ID         = int(os.environ.get("API_ID",     "0"))
-API_HASH       = os.environ.get("API_HASH",       "")
-SESSION_STRING = os.environ.get("SESSION_STRING", "")
+API_ID         = int(os.environ.get("API_ID",     "23349772"))
+API_HASH       = os.environ.get("API_HASH",       "5cdb5abdcc7efea6d6816bc544228108")
+SESSION_STRING = os.environ.get("SESSION_STRING", "1BJWap1wBu8HI4wCtS0dt_wkSPQHrJTlU4CzWAWAs0YuVsBJZwJzW3hub3oD8eQ304KC5NP6MH9gTtgBMflvQ4yrrDE_1SJhB0dXGSbsZzTyUctIoqravXhz75DJ0ABpXG624eR8dsIEa7jzghqZmHOX4Qz047bnAte68w5SqYGdTy7wfYQIgUv97USQ6JymeBu5Fa3jvxYNeqiz2Vh7dGBTUL0N1Z5rB71DlXQ9chgWBfeeXzdc_gGvKvuMY7oUJqui92pp7k34MDLiquLbE9j4wJmPWI61CkwVEbycmZb7pZCtfoOcsJ-XVY6EOWrZa-8Q3emqTbFgPl0BMt7NC10ERUw-9-ic=
+
+")
 TARGET_BOT     = "@kernel70bcc3a_bot"
 
 # Payment configuration
