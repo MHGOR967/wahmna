@@ -1,5 +1,5 @@
 services:
-  - type: worker          # Worker لا يحتاج إلى HTTP port
+  - type: web            # تم التغيير إلى web service
     name: wahm-bridge-bot
     env: python
     region: frankfurt     # أقرب منطقة للشرق الأوسط
@@ -15,3 +15,5 @@ services:
         sync: false       # أدخله يدوياً في لوحة Render
       - key: SESSION_STRING
         sync: false       # أدخله يدوياً في لوحة Render
+      - key: PORT
+        value: "10000"    # المنفذ الافتراضي لـ Render

@@ -12,6 +12,7 @@ Features:
   - One free lookup attempt per user.
   - Subsequent attempts require 250 Telegram Stars.
   - UserBot automatically clicks 'Telegram' button from @wahmnamperbot options.
+  - Runs as a Web Service on Render with a simple Flask server to stay alive.
 """
 
 import os
@@ -20,12 +21,16 @@ import asyncio
 import logging
 import json
 from collections import deque
+from threading import Thread
 
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telegram import Update, LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, PreCheckoutQueryHandler
 from telegram.constants import ParseMode
+
+# For Flask web server
+from flask import Flask
 
 # ─────────────────────────────────────────────
 #  Logging
@@ -39,6 +44,7 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────
 #  Configuration  (set these in Render → Environment)
 # ─────────────────────────────────────────────
+
 BOT_TOKEN      = os.environ.get("BOT_TOKEN",      "8622460568:AAHKMm5AoPtTMH8pmp-Cz5alCzuOLjmvuig")
 API_ID         = int(os.environ.get("API_ID",     "0"))
 API_HASH       = os.environ.get("API_HASH",       "")
@@ -48,6 +54,9 @@ TARGET_BOT     = "@kernel70bcc3a_bot"
 # Payment configuration
 PAYMENT_AMOUNT_STARS = 250 # 250 Telegram Stars
 USER_DATA_FILE = "user_data.json"
+
+# Flask server configuration
+FLASK_PORT = int(os.environ.get("PORT", 10000)) # Render provides PORT env var
 
 # ─────────────────────────────────────────────
 #  Shared State (thread-safe via asyncio)
@@ -322,9 +331,27 @@ async def successful_payment_callback(update: Update, context: ContextTypes.DEFA
         await update.message.reply_text("❌ تم الدفع ولكن حدث خطأ في معالجة طلبك. يرجى التواصل مع الدعم.")
 
 # ─────────────────────────────────────────────
+#  Flask Web Server for Render Health Checks
+# ─────────────────────────────────────────────
+app_flask = Flask(__name__)
+
+@app_flask.route("/")
+def home():
+    return "Telegram Bridge Bot is running!", 200
+
+def run_flask():
+    app_flask.run(host="0.0.0.0", port=FLASK_PORT)
+
+# ─────────────────────────────────────────────
 #  Entry Point
 # ─────────────────────────────────────────────
 async def main():
+    # ── Start Flask in a separate thread ─────────────────────────────────────
+    logger.info("Starting Flask web server on port %s...", FLASK_PORT)
+    flask_thread = Thread(target=run_flask)
+    flask_thread.daemon = True # Allow main program to exit even if thread is running
+    flask_thread.start()
+
     # ── Start UserBot ────────────────────────────────────────────────────────
     logger.info("Connecting UserBot...")
     await userbot.start()
