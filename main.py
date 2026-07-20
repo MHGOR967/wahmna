@@ -9,7 +9,7 @@ from threading import Thread
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telegram import Update, LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, PreCheckoutQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, PreCheckoutQueryHandler
 from telegram.constants import ParseMode
 from flask import Flask
 
@@ -17,13 +17,12 @@ from flask import Flask
 logging.basicConfig(format="%(asctime)s | %(levelname)s | %(name)s | %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Config
+# Config - تم تحديث التوكن هنا
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8622460568:AAHKMm5AoPtTMH8pmp-Cz5alCzuOLjmvuig")
-API_ID = int(os.environ.get("API_ID", "0"))
-API_HASH = os.environ.get("API_HASH", "")
+API_ID = int(os.environ.get("API_ID", "23349772"))
+API_HASH = os.environ.get("API_HASH", "5cdb5abdcc7efea6d6816bc544228108")
 SESSION_STRING = os.environ.get("SESSION_STRING", "")
 TARGET_BOT = "@kernel70bcc3a_bot"
-PAYMENT_AMOUNT_STARS = 250
 USER_DATA_FILE = "user_data.json"
 FLASK_PORT = int(os.environ.get("PORT", 10000))
 
@@ -67,9 +66,8 @@ app_flask = Flask(__name__)
 @app_flask.route("/")
 def home(): return "Bot is Alive!", 200
 
-# Main logic
 async def run_bot():
-    # Initialize Telethon inside the loop
+    # 1. Start UserBot (Telethon)
     userbot = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
     
     @userbot.on(events.NewMessage(chats=TARGET_BOT))
@@ -90,15 +88,16 @@ async def run_bot():
                          json={"chat_id": chat_id, "text": reply, "parse_mode": "MarkdownV2"} )
 
     await userbot.start()
-    
-    # Main Bot
-    app = Application.builder().token(BOT_TOKEN).build()
-    
-    async def start(u, c): await u.message.reply_text("أرسل اليوزر للبحث (أول مرة مجاناً ثم 250 نجمة).")
+    logger.info("UserBot connected!")
+
+    # 2. Start Main Bot (python-telegram-bot)
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    async def start(u, c): await u.message.reply_text("👋 أهلاً بك! أرسل اليوزر للبحث (أول مرة مجاناً ثم 250 نجمة).")
     
     async def handle(u, c):
         text = u.message.text.strip()
-        if not text.startswith("@"): return await u.message.reply_text("أرسل يوزر يبدأ بـ @")
+        if not text.startswith("@"): return await u.message.reply_text("⚠️ أرسل يوزر يبدأ بـ @")
         user_id = str(u.effective_user.id)
         data = load_user_data()
         if user_id not in data:
@@ -120,20 +119,19 @@ async def run_bot():
             await userbot.send_message(TARGET_BOT, q)
             await u.message.reply_text("✅ تم الدفع، جاري البحث...")
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
-    app.add_handler(PreCheckoutQueryHandler(pre))
-    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, success))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
+    application.add_handler(PreCheckoutQueryHandler(pre))
+    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, success))
 
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling(drop_pending_updates=True)
-    
-    # Keep running
-    while True: await asyncio.sleep(3600)
+    # Run polling
+    async with application:
+        await application.start()
+        await application.updater.start_polling(drop_pending_updates=True)
+        logger.info("Main Bot started polling with new token!")
+        while True:
+            await asyncio.sleep(3600)
 
 if __name__ == "__main__":
-    # Start Flask in thread
     Thread(target=lambda: app_flask.run(host="0.0.0.0", port=FLASK_PORT), daemon=True).start()
-    # Start Asyncio Loop
     asyncio.run(run_bot())
