@@ -1,0 +1,17 @@
+services:
+  - type: worker          # Worker لا يحتاج إلى HTTP port
+    name: wahm-bridge-bot
+    env: python
+    region: frankfurt     # أقرب منطقة للشرق الأوسط
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: BOT_TOKEN
+        value: "8295313828:AAG6zXLWKx7R5X-lV8azEu6oJzrtD5YbjOk"
+      - key: API_ID
+        sync: false       # أدخله يدوياً في لوحة Render
+      - key: API_HASH
+        sync: false       # أدخله يدوياً في لوحة Render
+      - key: SESSION_STRING
+        sync: false       # أدخله يدوياً في لوحة Render
